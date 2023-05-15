@@ -10,7 +10,7 @@ import {
   useDyteMeeting,
   useDyteSelector,
 } from '@dytesdk/react-web-core';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const questions = [
   'https://res.cloudinary.com/doy3ks7ls/video/upload/v1680075287/Intro_xb5ftf.mp4',
@@ -20,6 +20,7 @@ const questions = [
 ];
 
 function Interview() {
+  const $video = useRef<HTMLVideoElement>(null);
   const roomJoined = useDyteSelector((m) => m.self.roomJoined);
   const [stage, setStage] = useState(0);
   const { meeting } = useDyteMeeting();
@@ -32,17 +33,24 @@ function Interview() {
 
   return (
     <div className="flex h-full w-full">
-      <aside className="relative flex-1">
-        <video
-          className="h-full w-full object-cover"
-          src={questions[stage]}
-          controls
-          autoPlay
-        />
-      </aside>
+      {stage < questions.length && (
+        <aside className="relative flex-1">
+          <video
+            className="h-full w-full object-cover"
+            src={questions[stage]}
+            ref={$video}
+            controls
+            autoPlay
+          />
+        </aside>
+      )}
       <main className="flex flex-1 flex-col items-center justify-center gap-12 p-4">
-        {stage !== 0 && stage !== 3 && (
+        {stage > 0 && stage < questions.length && (
           <>
+            <p className="text-lg font-bold">
+              Question {stage} of {questions.length - 1}
+            </p>
+
             <DyteParticipantTile
               participant={meeting.self}
               className="relative aspect-[4/3] h-auto w-full max-w-[540px]"
@@ -54,24 +62,26 @@ function Interview() {
               />
               <DyteAvatar participant={meeting.self} />
             </DyteParticipantTile>
-
-            <p className="rounded-md border border-blue-500 px-4 py-2 text-blue-600">
-              Speak when the recording has started, you will see the indicator
-              above.
-            </p>
           </>
         )}
 
-        {stage === 0 && (
-          <p>Hello, click Start when you are ready to proceed.</p>
-        )}
+        {stage > 0 &&
+          stage < questions.length &&
+          recordingState === 'STARTING' && (
+            <p className="info">
+              <DyteSpinner />
+              Starting the recording...
+            </p>
+          )}
 
-        {stage > 0 && recordingState === 'STARTING' && (
-          <p className="info">
-            <DyteSpinner />
-            Starting the recording...
-          </p>
-        )}
+        {stage > 0 &&
+          stage < questions.length &&
+          recordingState === 'STOPPING' && (
+            <p className="info">
+              <DyteSpinner />
+              Stopping the recording...
+            </p>
+          )}
 
         {stage > 0 && recordingState === 'RECORDING' && (
           <p className="info border-red-500 text-red-700">
@@ -80,14 +90,19 @@ function Interview() {
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          {stage > 0 && stage < 3 && recordingState === 'IDLE' && (
-            <button
-              className="btn bg-red-500"
-              onClick={() => meeting.recording.start()}
-            >
-              Start Recording
-            </button>
-          )}
+          {stage > 0 &&
+            stage < questions.length &&
+            recordingState === 'IDLE' && (
+              <button
+                className="btn bg-red-500"
+                onClick={() => {
+                  $video.current?.pause();
+                  meeting.recording.start();
+                }}
+              >
+                Start Recording My Answer
+              </button>
+            )}
 
           {stage === 0 && (
             <button
@@ -96,17 +111,17 @@ function Interview() {
                 setStage(1);
               }}
             >
-              Start
+              Awesome, I&apos;m ready 🚀
             </button>
           )}
 
-          {stage === 1 && (
+          {stage > 0 && stage < questions.length - 1 && (
             <button
               className="btn"
               onClick={async () => {
                 if (recordingState === 'RECORDING') {
                   await meeting.recording.stop();
-                  setStage(2);
+                  setStage((stage) => stage + 1);
                 }
               }}
               disabled={recordingState !== 'RECORDING'}
@@ -114,21 +129,22 @@ function Interview() {
               Next
             </button>
           )}
-          {stage === 2 && (
+
+          {stage === questions.length - 1 && (
             <button
               className="btn"
               onClick={() => {
                 if (recordingState === 'RECORDING') {
                   meeting.recording.stop();
                 }
-                setStage(3);
+                setStage(questions.length);
               }}
             >
               Finish
             </button>
           )}
 
-          {stage === 3 && (
+          {stage === questions.length && (
             <div>
               <p className="max-w-md text-center text-2xl font-semibold">
                 Thank you for attending the interview. Your responses were
@@ -156,6 +172,10 @@ export default function InterviewPage() {
 
     initMeeting({
       authToken,
+      defaults: {
+        video: false,
+        audio: false,
+      },
     }).then((m) => m?.joinRoom());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
