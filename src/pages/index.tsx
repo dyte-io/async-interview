@@ -93,7 +93,7 @@ export default function Home() {
           />
 
           <button
-            className="h-10 rounded-md bg-blue-600 text-white"
+            className="h-10 rounded-md bg-blue-600 font-semibold text-white"
             disabled={submitting}
           >
             {submitting ? 'Starting...' : 'Start'}
