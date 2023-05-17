@@ -164,7 +164,7 @@ export default function InterviewPage() {
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
 
-    const authToken = search.get('authToken');
+    const authToken = search.get('token');
 
     if (!authToken) {
       return alert('authToken was not passed');
@@ -172,10 +172,6 @@ export default function InterviewPage() {
 
     initMeeting({
       authToken,
-      defaults: {
-        video: false,
-        audio: false,
-      },
     }).then((m) => m?.joinRoom());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
