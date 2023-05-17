@@ -83,11 +83,13 @@ function Interview() {
             </p>
           )}
 
-        {stage > 0 && recordingState === 'RECORDING' && (
-          <p className="info border-red-500 text-red-700">
-            Recording has started, you can start speaking now
-          </p>
-        )}
+        {stage > 0 &&
+          stage < questions.length &&
+          recordingState === 'RECORDING' && (
+            <p className="info border-red-500 text-red-700">
+              Recording has started, you can start speaking now
+            </p>
+          )}
 
         <div className="flex flex-wrap items-center gap-2">
           {stage > 0 &&
