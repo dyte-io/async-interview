@@ -10,6 +10,7 @@ import {
   useDyteMeeting,
   useDyteSelector,
 } from '@dytesdk/react-web-core';
+import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
 
 const questions = [
@@ -183,8 +184,13 @@ export default function InterviewPage() {
   }, [initMeeting]);
 
   return (
-    <DyteProvider value={meeting} fallback={<div>Loading...</div>}>
-      <Interview />
-    </DyteProvider>
+    <>
+      <Head>
+        <title>Async Interview</title>
+      </Head>
+      <DyteProvider value={meeting} fallback={<div>Loading...</div>}>
+        <Interview />
+      </DyteProvider>
+    </>
   );
 }
